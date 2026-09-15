@@ -66,6 +66,18 @@
 | `get_slide_collision_count()` (2D y 3D) | — | "Solo cuenta colisiones que cambiaron de dirección" (nota oficial, verificado 4.7) | No es un conteo de contactos: es el nº de rebotes del slide en el tick. |
 | `AnimatableBody2D` / `AnimatableBody3D` | Existentes | Existentes (verificado 4.7) | Para cuerpos que se mueven por animación y deben **empujar**; `StaticBody*` movido por código se teleporta (no empuja). |
 
+### Lote 7 (UI) — verificado 4.7 el 2026-09-15
+
+| API | 4.0 | 4.7 (stable) | Diferencia / acción |
+|---|---|---|---|
+| `Control` (tabla 4.7: anchors/offsets 0.0, `size_flags_* 1`, `custom_minimum_size (0,0)`, `custom_maximum_size (-1,-1)`, `mouse_filter 0`, `focus_mode 0`, `pivot_offset (0,0)`, `clip_contents false`, `grow_* 1`, `theme`/`theme_type_variation`, `translation_context`, `auto_translate`, `localize_numeral_system true`, `accessibility_*`, `offset_transform_*`) | — (no re-verificado en 4.0) | Existentes (verificado en 4.7) | **`Control` SÍ tiene `pivot_offset`** (a diferencia de `Node2D`, que no lo tiene en 4.7 — verificado Lote 5). "Theme items are **not** Object properties" (oficial) → `get_theme_*`/`add_theme_*_override`. |
+| `Control` focus (un solo focus, `grab_focus`, visual solo con keyboard/gamepad) | Comportamiento estable | Comportamiento estable (verificado en 4.7) | "Only one Control node can be in focus"; el focus visual no aparece con mouse/touch (oficial). |
+| `Container` (props con overrides: `mouse_filter 1` (PASS), `propagate_maximum_size true`; señales `pre_sort_children`/`sort_children`; `NOTIFICATION_*_SORT_CHILDREN 50/51`; `queue_sort`, `fit_child_in_rect`; Inherited By de 13 types) | — (no re-verificado en 4.0) | Existentes (verificado en 4.7) | Los hijos "give up their own positioning ability" (oficial); la UI del editor de Godot es enteramente containers (oficial). |
+| `Theme` (props `default_base_scale 0.0`, `default_font`, `default_font_size -1`; familias `get/clear/has_{color,constant,font,font_size,icon,stylebox}`; `get_theme_item`; types/variations; `ProjectSettings.gui/theme/custom`; `Control.theme`) | — (no re-verificado en 4.0) | Existentes (verificado en 4.7) | Items de 6 tipos (oficial); (name, type) únicos dentro del tema (oficial); herencia de types por clase (oficial); `focus` stylebox = overlay (oficial). |
+| `Translation` (props `locale "en"`, `plural_rules_override ""; `add/get_message`, `add/get_plural_message`, context vacío = sin contexto) | — (no re-verificado en 4.0) | Existentes (verificado en 4.7) | `tr_n` solo con enteros positivos/zero (oficial); placeholders named (`.format`) recomendados (oficial). |
+| RTL mirroring (anchors/margins espejados, alignment swap, orden de hijos en containers, elementos internos; coordinate system y sprites NO) | — | Comportamiento (verificado en 4.7, tutorial oficial) | Transparente (oficial); overrides: `layout_direction`, `text_direction`, `language`. |
+| Fuente default (Latin-1 subset) | — | Comportamiento (verificado en 4.7) | No cubre CJK/cirílico (oficial) → `DynamicFont` multilingüe en el Theme; remaps NO soportan DynamicFont (oficial) → fallback system. |
+
 ### Lote 6 (animación) — verificado 4.7 el 2026-09-15
 
 | API | 4.0 | 4.7 (stable) | Diferencia / acción |

@@ -1,13 +1,13 @@
 # GODOT SKILLS INDEX
 
 > Índice global de la biblioteca de skills para Godot 4.x (spec §55).
-> **Estado: LOTE 6** — 2026-09-15. Fuente de verdad de la API: `docs.godotengine.org/en/stable/` (rama **4.7**).
+> **Estado: LOTE 7** — 2026-09-15. Fuente de verdad de la API: `docs.godotengine.org/en/stable/` (rama **4.7**).
 
 ## Resumen
 
 | Métrica | Valor |
 |---|---|
-| Skills creadas | **21** (1 compuesta + 20 base) |
+| Skills creadas | **25** (1 compuesta + 24 base) |
 | Skills pendientes | ver plan de lotes (lotes 1, 2, 6–20) |
 | Skills actualizadas | 0 en el Lote 5 |
 | Skills descartadas por duplicación | 0 |
@@ -67,6 +67,15 @@
 | `godot-area3d` | Física · Base (detección) | Principiante | 4.7 | Verified |
 | `godot-physics-materials` | Física · Base (materiales) | Principiante | 4.7 | Verified |
 
+## UI
+
+| ID | Categoría | Nivel | Godot | Estado |
+|---|---|---|---|---|
+| `godot-control` | UI · Base | Principiante | 4.7 | Verified |
+| `godot-containers` | UI · Base (layout) | Principiante | 4.7 | Verified |
+| `godot-theme` | UI · Base (estilo) | Principiante | 4.7 | Verified |
+| `godot-localization` | UI · Base (i18n) | Intermedio | 4.7 | Verified |
+
 ## Shaders
 
 | ID | Categoría | Nivel | Godot | Estado |
@@ -80,7 +89,7 @@
 | `godot-rendering-performance` | Performance | Avanzado | 4.7 | Verified |
 | `godot-lod` | 3D · Performance | Avanzado | 4.7 | Verified |
 
-## Mapas por pregunta (spec §2 — cobertura al cierre del Lote 6)
+## Mapas por pregunta (spec §2 — cobertura al cierre del Lote 7)
 
 | Pregunta | Skill a consultar |
 |---|---|
@@ -105,6 +114,10 @@
 | ¿Cómo hacer un platformer 2D (saltos, pendientes, plataformas una-vía/móviles)? | `godot-platformer-2d` |
 | ¿Cómo armar mapas por tiles (colisión, terreno, datos por tile, isométrico/hex)? | `godot-tilemap` |
 | ¿Cómo hacer una cámara 2D (follow, smoothing, límites, zoom, lookahead)? | `godot-camera2d` |
+| ¿Cómo posicionar/resizar la UI (anchors, offsets, HUD)? | `godot-control` |
+| ¿Cómo armar un layout (filas, columnas, grid, scroll, tabs)? | `godot-containers` |
+| ¿Cómo estilizar la UI (tema, fuentes, colores, variaciones)? | `godot-theme` |
+| ¿Cómo traducir la UI (tr, plurales, placeholders, RTL, pseudolocalización)? | `godot-localization` |
 | ¿Transform/posición/rotación de nodos 2D (local vs global, `to_global`)? | `godot-node2d` |
 | ¿Mi juego tiene pocos FPS? | `godot-rendering-performance` (§ Flujo de diagnóstico) + `godot-physics` (si es física) |
 | ¿El personaje no se mueve / no salta bien / la cámara choca / la animación no cambia? | La skill del subsistema (§ Debugging) |
@@ -120,7 +133,7 @@
 | 4 | Physics (capas, shapes, raycast/shapecast, areas, materiales, interpolación) | ✅ Hecho (2026-09-15): `godot-physics`, `godot-raycast3d`, `godot-area3d`, `godot-physics-materials` |
 | 5 | 2D (nodos, tilemap, plataformas, cámaras 2D) | ✅ Hecho (2026-09-15): `godot-node2d`, `godot-tilemap`, `godot-platformer-2d`, `godot-camera2d` |
 | 6 | Animation (BlendSpace, IK, retargeting, Skeleton3D) | ✅ Hecho (2026-09-15): `godot-blendspace`, `godot-ik`, `godot-retargeting`, `godot-skeleton3d` |
-| 7 | UI (containers, theme, focus, localización) | Pendiente |
+| 7 | UI (containers, theme, focus, localización) | ✅ Hecho (2026-09-15): `godot-control`, `godot-containers`, `godot-theme`, `godot-localization` |
 | 8 | Rendering (renderers, MSAA, sombras, culling, profiling GPU) | Pendiente |
 | 9 | Shaders (canvasitem, post-process, efectos) | Pendiente |
 | 10 | Navigation + IA (NavigationServer3D, FSM, behavior trees) | Pendiente |
@@ -150,3 +163,5 @@ Marques explícitas dejadas por las skills (no afirmar como API hasta verificar 
 | `godot-physics-materials` | Clase `PhysicsMaterial3D` / enums `*_combine_mode` | La clase 4.7 es `PhysicsMaterial` (una sola; la página 3D da 404) y la combinación la rigen `rough`/`absorbent` |
 | `godot-tilemap` | Getter exacto de custom data en `TileData` (`TileData.custom_data[…]/get_custom_data(…)`) | El mecanismo de capas de datos está verificado en `TileSet`/`TileMapLayer`; el acceso exacto al valor en `TileData` no se verificó en esta revisión — verificar `TileData` antes de usar |
 | `godot-node2d` / `godot-platformer-2d` | Índices exactos de los monitores `Performance.PHYSICS_2D_ACTIVE_OBJECTS`/`PHYSICS_2D_COLLISION_PAIRS` | La familia de monitores 2D existe; los índices numéricos no se citan sin verificar (los de 3D, 20/21, sí están verificados) |
+| `godot-localization` | Ruta exacta de `ProjectSettings` para la pseudolocalización | El tutorial 4.7 dice "advanced Project Settings"; la clave exacta no se afirma sin verificar |
+| `godot-theme` | `set_*` por familia del `Theme` (p. ej. `set_color`) | Las familias `get_*`/`clear_*`/`has_*` están verificadas en la tabla 4.7; los `set_*` se citan de la misma tabla pero no se revisaron uno por uno — verificar al usar |

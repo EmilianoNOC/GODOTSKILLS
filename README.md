@@ -36,19 +36,24 @@ ARENASKILLS/
     ├── godot-blendspace.md               ← Lote 6: base — BlendSpace1D/2D (sync modes, triángulos)
     ├── godot-skeleton3d.md               ← Lote 6: base — bones, pose vs rest, physical bones
     ├── godot-ik.md                       ← Lote 6: base — IK nativa (SkeletonModifier3D family)
-    └── godot-retargeting.md              ← Lote 6: base — BoneMap/SkeletonProfile + runtime
+    ├── godot-retargeting.md              ← Lote 6: base — BoneMap/SkeletonProfile + runtime
+    ├── godot-control.md                  ← Lote 7: base — anchors/offsets, sizing, input, focus
+    ├── godot-containers.md               ← Lote 7: base — 13 containers, sizing options
+    ├── godot-theme.md                    ← Lote 7: base — Theme, items, variations, overrides
+    └── godot-localization.md             ← Lote 7: base — tr/tr_n, contexts, RTL, pseudoloc
 ```
 
 ## Estado actual
 
-**LOTE 6** (2026-09-15) — infraestructura + skill compuesta + 20 skills base:
+**LOTE 7** (2026-09-15) — infraestructura + skill compuesta + 24 skills base:
 
 - ✅ `godot-third-person-character` (compuesta, Verified 4.7): integra las bases.
 - ✅ 8 skills base (Lote 3, Verified 4.7): `godot-characterbody3d`, `godot-character-controller`, `godot-input`, `godot-animationtree`, `godot-camera3d`, `godot-shader-spatial`, `godot-rendering-performance`, `godot-lod`.
 - ✅ 4 skills base (Lote 4, Verified 4.7): `godot-physics`, `godot-raycast3d`, `godot-area3d`, `godot-physics-materials` — cierran las referencias pendientes de `godot-physics` en las skills de Lote 0/3.
 - ✅ 4 skills base (Lote 5, Verified 4.7): `godot-node2d`, `godot-tilemap`, `godot-platformer-2d`, `godot-camera2d` — el cluster 2D (mapas, juego, cámara) con referencias cruzadas al cluster 3D (asimetrías 2D↔3D verificadas: `move_and_slide()` void/bool, defaults distintos).
 - ✅ 4 skills base (Lote 6, Verified 4.7): `godot-blendspace`, `godot-skeleton3d`, `godot-ik`, `godot-retargeting` — el cluster animación (mezcla profunda, esqueleto, IK nativa 4.6+, retargeting import/runtime).
-- ⏳ Resto de lotes (1, 2, 7–20) pendientes — ver plan en `GODOT_SKILLS_INDEX.md`.
+- ✅ 4 skills base (Lote 7, Verified 4.7): `godot-control`, `godot-containers`, `godot-theme`, `godot-localization` — el cluster UI (layout, estilo, i18n/RTL).
+- ⏳ Resto de lotes (1, 2, 8–20) pendientes — ver plan en `GODOT_SKILLS_INDEX.md`.
 
 ## Disciplina de la biblioteca
 

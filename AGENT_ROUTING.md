@@ -1,7 +1,7 @@
 # AGENT_ROUTING
 
 > Guía de enrutamiento para agentes LLM: qué skills cargar para cada tipo de petición, y qué NO usar.
-> **Estado: LOTE 6** — 2026-09-15. API referenciada: Godot **4.7 (stable)**.
+> **Estado: LOTE 7** — 2026-09-15. API referenciada: Godot **4.7 (stable)**.
 
 ## Cómo funciona
 
@@ -44,6 +44,10 @@
 | **Mapas 2D** | "tilemap", "mapa por tiles", "terreno", "isométrico", "datos por tile" | `godot-tilemap` |
 | **Juego 2D** | "platformer", "saltos", "plataforma una-vía", "plataformas móviles" | `godot-platformer-2d` |
 | **Cámara 2D** | "follow del player", "límites de cámara", "zoom 2D", "lookahead" | `godot-camera2d` |
+| **UI (base)** | "anchors", "offsets", "HUD", "focus de gamepad", "mouse_filter" | `godot-control` |
+| **UI (layout)** | "VBox/HBox", "grid", "scroll", "tabs", "split", "márgenes" | `godot-containers` |
+| **UI (estilo)** | "tema", "fuentes", "colores", "stylebox", "variaciones" | `godot-theme` |
+| **UI (i18n)** | "traducir", "tr()", "plurales", "placeholders", "RTL", "pseudolocalización" | `godot-localization` |
 
 ### Cargas opcionales (solo si la petición lo toca)
 
@@ -57,6 +61,8 @@
 | "la cámara siga al player 2D sin jitter" | `godot-camera2d` (`process_callback = PHYSICS`) + `godot-platformer-2d` |
 | "quiero que salte/siga con buen feel" | `godot-character-controller` (el feel, 2D y 3D) |
 | "que el brazo/cabeza siga a algo" | `godot-ik` (+ `godot-skeleton3d` si hay que mutar huesos) |
+| "el HUD / la UI debe reflow a diferentes resoluciones" | `godot-control` (+ `godot-containers` si es layout complejo) |
+| "el juego debe soportar varios idiomas" | `godot-localization` (+ `godot-theme` para la fuente multilingüe) |
 | "los modelos nuevos deben usar las mismas animaciones" | `godot-retargeting` (+ `godot-skeleton3d`) |
 
 ### Reglas de NO-carga (evitar sobrecarga)
@@ -67,6 +73,7 @@
 - **No cargar `godot-raycast3d`/`godot-area3d`** si no hay world interaction en la petición.
 - **No cargar `godot-tilemap`** si el level 2D es por nodos/mesh (sin tiles).
 - **No cargar `godot-ik`/`godot-retargeting`** si la petición es solo una state machine de locomoción (sin targets que seguir, sin compartir animaciones entre modelos).
+- **No cargar `godot-containers`/`godot-theme`** si la petición es solo posicionar 3-4 controles con anchors (basta `godot-control`).
 - **No cargar `godot-camera2d`** para una escena 3D (y viceversa con `godot-camera3d`).
 
 ## Ejemplos de enrutamiento
@@ -95,6 +102,9 @@
 8. **"El brazo debe seguir a la mano que agarró un objeto"**
    → `godot-ik` (TwoBoneIK3D + target Node3D) + `godot-skeleton3d` (el modificador es hijo del skeleton). Opcional: `godot-raycast3d` si el target se proyecta al suelo.
 
+9. **"Hacer el HUD: barra de vida, minimapa, inventario que aguanta el resize"**
+   → `godot-control` (CanvasLayer + anchors) + `godot-containers` (el layout) + `godot-theme` (estilo, márgenes). Opcional: `godot-localization` si hay i18n, `godot-camera2d` (minimapa en SubViewport).
+
 ## Si la skill no existe aún (lotes 1, 2, 6–20)
 
 | Tema | Estado | Qué hacer mientras |
@@ -102,7 +112,7 @@
 | Editor, project settings, lifecycle, señales (Lote 1) | Pendiente | Usar la docs oficial 4.7; no afirmar APIs sin verificar |
 | Sintaxis GDScript, clases, await, @tool (Lote 2) | Pendiente | Usar la docs oficial 4.7 |
 | BlendSpace, IK, retargeting, Skeleton3D (Lote 6) | ✅ Hecho | `godot-blendspace`, `godot-ik`, `godot-retargeting`, `godot-skeleton3d` |
-| UI/containers/theme (Lote 7) | Pendiente | Docs oficial 4.7 |
+| UI/containers/theme (Lote 7) | ✅ Hecho | `godot-control`, `godot-containers`, `godot-theme`, `godot-localization` |
 | Renderers, MSAA, sombras, culling (Lote 8) | Pendiente | `godot-rendering-performance` cubre el diagnóstico (no la config) |
 | Shaders canvasitem/post-process (Lote 9) | Pendiente | `godot-shader-spatial` (3D) es el patrón de shader; el 2D difiere |
 | Navigation2D/3D, IA (Lote 10) | Pendiente | `godot-tilemap` cubre los navigation layers (pintar), no la navegación |

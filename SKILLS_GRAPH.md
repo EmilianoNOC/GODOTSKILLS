@@ -1,6 +1,6 @@
 # SKILLS_GRAPH
 
-> Matriz de dependencias entre skills (spec §49). **Lote 6** — 2026-09-15.
+> Matriz de dependencias entre skills (spec §49). **Lote 7** — 2026-09-15.
 > `(P)` = skill pendiente de creación.
 
 ## Grafo (Lote 5)
@@ -84,6 +84,25 @@ terbody3d   controller                        tree             spatial  performa
    └─ godot-ik ← godot-character-controller (el target suele ser el player)
    └─ godot-ik ← godot-raycast3d (proyectar targets al suelo)
    └─ godot-retargeting ← godot-character-controller (motion_scale/root motion)
+
+ CLUSTER UI (Lote 7, todas Verified 4.7):
+
+   godot-control  (raíz UI: anchors/offsets, sizing, _gui_input, focus,
+                  theme overrides, pivot_offset — el otro hijo de CanvasItem)
+    ▲              ▲                  ▲
+    │              │                  │
+    │              │                  └── godot-localization
+    │              │                      (auto_translate, translation_context,
+    │              │                       layout_direction, tr/tr_n, RTL)
+    │              │
+    │              └──────── godot-containers  (los hijos ceden su
+    │                                  posicionamiento; sizing options;
+    │                                  13 types; nesting = editor de Godot)
+    │
+    └────────────── godot-theme  (Theme resource, cascada, items,
+                                  overrides NO son Object properties)
+   └─ godot-control ← godot-camera2d (el HUD en CanvasLayer no se mueve
+      con la cámara) + godot-node2d (comparten CanvasItem: z_index/visible)
 ```
 
 ### De la compuesta hacia las bases (Lote 0, ya materializadas)
@@ -146,6 +165,20 @@ terbody3d   controller                        tree             spatial  performa
 | `godot-platformer-2d` | `godot-physics-materials` | opcional | Fricción/rebote de superficies 2D |
 | `godot-camera2d` | `godot-node2d` | obligatoria | La cámara es `Node2D` (canvas, transform) |
 
+### Cluster UI (Lote 7)
+
+| Skill | Depende de | Tipo | Justificación |
+|---|---|---|---|
+| `godot-control` | (ninguna) | raíz UI | Anchors/offsets, sizing, input GUI, focus, overrides |
+| `godot-containers` | `godot-control` | obligatoria | Los hijos son `Control`; sizing options = props de `Control` |
+| `godot-theme` | `godot-control` | obligatoria | Overrides y `theme_type_variation` viven en `Control` |
+| `godot-localization` | `godot-control` | obligatoria | `auto_translate`/`translation_context`/`layout_direction` son props de `Control` |
+| `godot-control` | `godot-camera2d` | opcional (cruce) | El HUD en `CanvasLayer` no se mueve con la cámara |
+| `godot-control` | `godot-node2d` | opcional (cruce) | El otro hijo de `CanvasItem` (comparten `z_index`/`visible` — oficial) |
+| `godot-containers` | `godot-theme` | obligatoria | Los márgenes/padding son constantes del tema (oficial) |
+| `godot-localization` | `godot-theme` | obligatoria | La fuente multilingüe (DynamicFont) vive en el Theme (oficial) |
+| `godot-localization` | `godot-containers` | opcional (cruce) | El reflow con strings largos |
+
 ### Cluster animación (Lote 6)
 
 | Skill | Depende de | Tipo | Justificación |
@@ -179,10 +212,9 @@ terbody3d   controller                        tree             spatial  performa
 | `godot-raycast3d` | `godot-raycast2d` (Lote 5 ext.) | espejo |
 | `godot-area3d` | `godot-area2d` (Lote 5 ext.) / `godot-audio-buses` (Lote 11) | espejo / puente audio |
 | `godot-physics-materials` | `godot-physics-materials-2d` (Lote 5 ext.) | espejo |
-| `godot-node2d` | `godot-control` (Lote 7) / `godot-canvasitem` (Lote 7/9) | el otro hijo de `CanvasItem` (UI) / `z_index`+drawing |
+| `godot-node2d` | `godot-canvasitem` (Lote 9) | `z_index`+drawing (el otro hijo de `CanvasItem`) |
 | `godot-tilemap` | `godot-navigation2d` (Lote 10) / `godot-light2d` (Lote 11) | navigation layers / occlusion layers |
 | `godot-platformer-2d` | `godot-area2d` (Lote 5 ext.) | pickups/zonas del platformer |
-| `godot-camera2d` | `godot-control` (Lote 7) | el HUD que NO se mueve con la cámara |
 
 ## Reglas del grafo
 
