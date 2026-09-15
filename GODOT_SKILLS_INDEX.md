@@ -1,13 +1,13 @@
 # GODOT SKILLS INDEX
 
 > Índice global de la biblioteca de skills para Godot 4.x (spec §55).
-> **Estado: LOTE 5** — 2026-09-15. Fuente de verdad de la API: `docs.godotengine.org/en/stable/` (rama **4.7**).
+> **Estado: LOTE 6** — 2026-09-15. Fuente de verdad de la API: `docs.godotengine.org/en/stable/` (rama **4.7**).
 
 ## Resumen
 
 | Métrica | Valor |
 |---|---|
-| Skills creadas | **17** (1 compuesta + 16 base) |
+| Skills creadas | **21** (1 compuesta + 20 base) |
 | Skills pendientes | ver plan de lotes (lotes 1, 2, 6–20) |
 | Skills actualizadas | 0 en el Lote 5 |
 | Skills descartadas por duplicación | 0 |
@@ -47,6 +47,10 @@
 | ID | Categoría | Nivel | Godot | Estado |
 |---|---|---|---|---|
 | `godot-animationtree` | Animation | Intermedio | 4.7 | Verified |
+| `godot-blendspace` | Animation · Base (mezcla) | Intermedio | 4.7 | Verified |
+| `godot-skeleton3d` | Animation · Base (esqueleto) | Intermedio | 4.7 | Verified |
+| `godot-ik` | Animation · Base (esqueleto) | Intermedio | 4.7 | Verified |
+| `godot-retargeting` | Animation · Base (assets) | Intermedio | 4.7 | Verified |
 
 ## Input
 
@@ -76,7 +80,7 @@
 | `godot-rendering-performance` | Performance | Avanzado | 4.7 | Verified |
 | `godot-lod` | 3D · Performance | Avanzado | 4.7 | Verified |
 
-## Mapas por pregunta (spec §2 — cobertura al cierre del Lote 5)
+## Mapas por pregunta (spec §2 — cobertura al cierre del Lote 6)
 
 | Pregunta | Skill a consultar |
 |---|---|
@@ -85,6 +89,10 @@
 | ¿Cómo ajustar el feel de movimiento (aceleración, salto, coyote, buffer, wall slide)? | `godot-character-controller` |
 | ¿Cómo configurar input (teclado/ratón/gamepad, remape, captura)? | `godot-input` |
 | ¿Cómo utilizar AnimationTree para locomoción / one-shots / root motion? | `godot-animationtree` |
+| ¿Cómo hacer locomoción por velocidad / 8 direcciones / frames 2D (BlendSpace)? | `godot-blendspace` |
+| ¿Cómo hacer IK (brazo/pie/cabeza que mira) en Godot 4? | `godot-ik` |
+| ¿Cómo compartir animaciones entre modelos distintos (retargeting)? | `godot-retargeting` |
+| ¿Cómo consultar/mover bones, pose vs rest, physical bones? | `godot-skeleton3d` |
 | ¿Cómo crear una cámara 3D (orbital, spring arm, proyección, transiciones)? | `godot-camera3d` |
 | ¿Cómo escribir shaders 3D (render modes, uniforms, per-instance, sRGB)? | `godot-shader-spatial` |
 | ¿Cómo medir/diagnosticar rendimiento de rendering (CPU/GPU/VRAM/draw calls)? | `godot-rendering-performance` |
@@ -111,7 +119,7 @@
 | 3 | Las 8 skills base del Lote 0 (characterbody3d, character-controller, input, animationtree, camera3d, shader-spatial, rendering-performance, lod) | ✅ Hecho (2026-09-15) |
 | 4 | Physics (capas, shapes, raycast/shapecast, areas, materiales, interpolación) | ✅ Hecho (2026-09-15): `godot-physics`, `godot-raycast3d`, `godot-area3d`, `godot-physics-materials` |
 | 5 | 2D (nodos, tilemap, plataformas, cámaras 2D) | ✅ Hecho (2026-09-15): `godot-node2d`, `godot-tilemap`, `godot-platformer-2d`, `godot-camera2d` |
-| 6 | Animation (BlendSpace, IK, retargeting, Skeleton3D) | Pendiente |
+| 6 | Animation (BlendSpace, IK, retargeting, Skeleton3D) | ✅ Hecho (2026-09-15): `godot-blendspace`, `godot-ik`, `godot-retargeting`, `godot-skeleton3d` |
 | 7 | UI (containers, theme, focus, localización) | Pendiente |
 | 8 | Rendering (renderers, MSAA, sombras, culling, profiling GPU) | Pendiente |
 | 9 | Shaders (canvasitem, post-process, efectos) | Pendiente |

@@ -1,6 +1,6 @@
 # SKILLS_GRAPH
 
-> Matriz de dependencias entre skills (spec §49). **Lote 5** — 2026-09-15.
+> Matriz de dependencias entre skills (spec §49). **Lote 6** — 2026-09-15.
 > `(P)` = skill pendiente de creación.
 
 ## Grafo (Lote 5)
@@ -63,9 +63,28 @@ terbody3d   controller                        tree             spatial  performa
                      ← godot-camera2d (follow; process_callback PHYSICS)
                      ← godot-character-controller (feel: coyote/buffer)
                      ← godot-physics-materials (fricción de superficies)
-```
 
-## Aristas (qué necesita de qué)
+ CLUSTER ANIMACIÓN (Lote 6, todas Verified 4.7):
+
+   godot-animationtree  (Lote 3: StateMachine, OneShot, BlendTree wiring)
+    ▲
+    │ (los BlendSpaces se cablean en el BlendTree: "output", parameters/...)
+    │
+   godot-blendspace  (BlendSpace1D/2D: blend_position, sync modes, triángulos)
+    │
+    │ (los clips animan bones)
+    ▼
+   godot-skeleton3d  (bones, pose vs rest, signals, physical bones)
+    ▲                          ▲
+    │ (modificadores hijos;     │ (misma familia; motion_scale)
+    │  post-AnimationMixer)     │
+   godot-ik  ────────────────── godot-retargeting
+   (TwoBone/Chain/FABRIK/CCD/   (BoneMap import + RetargetModifier3D runtime)
+    Jacobian/Spline + constraints)
+   └─ godot-ik ← godot-character-controller (el target suele ser el player)
+   └─ godot-ik ← godot-raycast3d (proyectar targets al suelo)
+   └─ godot-retargeting ← godot-character-controller (motion_scale/root motion)
+```
 
 ### De la compuesta hacia las bases (Lote 0, ya materializadas)
 
@@ -127,6 +146,22 @@ terbody3d   controller                        tree             spatial  performa
 | `godot-platformer-2d` | `godot-physics-materials` | opcional | Fricción/rebote de superficies 2D |
 | `godot-camera2d` | `godot-node2d` | obligatoria | La cámara es `Node2D` (canvas, transform) |
 
+### Cluster animación (Lote 6)
+
+| Skill | Depende de | Tipo | Justificación |
+|---|---|---|---|
+| `godot-skeleton3d` | (ninguna del lote) | raíz del cluster | Huesos, pose vs rest, señales, physical bones |
+| `godot-blendspace` | `godot-animationtree` | obligatoria | Los BlendSpaces se cablean en el `AnimationNodeBlendTree` (nodo "output", `parameters/...`) |
+| `godot-blendspace` | `godot-character-controller` | opcional | El controller produce el `blend_position` (velocidad/dirección) |
+| `godot-ik` | `godot-skeleton3d` | obligatoria | Los modificadores son **hijos del `Skeleton3D`** (oficial); corren post-`AnimationMixer` |
+| `godot-ik` | `godot-animationtree` | base compartida | La animación corre antes; el IK ajusta después |
+| `godot-ik` | `godot-character-controller` | opcional (cruce) | El target suele ser el player |
+| `godot-ik` | `godot-raycast3d` | opcional (cruce) | Proyectar targets al suelo (pies) |
+| `godot-retargeting` | `godot-skeleton3d` | obligatoria | El skeleton destino (rest, `motion_scale`) |
+| `godot-retargeting` | `godot-ik` | base compartida | Misma familia de modificadores; ajustes post-retarget |
+| `godot-retargeting` | `godot-character-controller` | opcional (cruce) | `motion_scale` y root motion |
+| `godot-animationtree` | `godot-blendspace` | (cruce inverso) | La skill de Lote 3 referencia la de mezcla para el dominio profundo |
+
 ### Hacia pendientes (referenciados desde las bases)
 
 | Skill | Depende de (P) | Tipo |
@@ -134,7 +169,11 @@ terbody3d   controller                        tree             spatial  performa
 | `godot-input` | `godot-input-touch` (Lote 20) | extensión |
 | `godot-camera3d` | `godot-cinematic-camera` (Lote 0 ext.) / `godot-xr` (Lote 20) | extensión |
 | `godot-shader-spatial` | `godot-shader-canvasitem` (Lote 9) / `godot-standardmaterial3d` (Lote 8) | alternativas |
-| `godot-animationtree` | `godot-root-motion` (Lote 6) / `godot-recipe-locomotion-blend` (Lote 6) | extensión |
+| `godot-animationtree` | `godot-recipe-locomotion-blend` (Lote 18) / `godot-recipe-root-motion` (Lote 18) | recetas |
+| `godot-blendspace` | `godot-recipe-locomotion-blend` (Lote 18) | receta |
+| `godot-ik` | `godot-physicalbones` / `godot-springbones` (Lote 6 ext.) | simuladores de la misma familia |
+| `godot-skeleton3d` | `godot-physicalbones` (Lote 6 ext.) | ragdoll en detalle |
+| `godot-retargeting` | `godot-recipe-mixamo-pipeline` (Lote 18) | receta |
 | `godot-physics` | `godot-vehiclebody3d` (Lote 4 ext.) | extensión |
 | `godot-physics` | `godot-softbody3d` (fuera de scope declarado) | — |
 | `godot-raycast3d` | `godot-raycast2d` (Lote 5 ext.) | espejo |

@@ -1,7 +1,7 @@
 # AGENT_ROUTING
 
 > Guía de enrutamiento para agentes LLM: qué skills cargar para cada tipo de petición, y qué NO usar.
-> **Estado: LOTE 5** — 2026-09-15. API referenciada: Godot **4.7 (stable)**.
+> **Estado: LOTE 6** — 2026-09-15. API referenciada: Godot **4.7 (stable)**.
 
 ## Cómo funciona
 
@@ -28,6 +28,10 @@
 | Feel de control | "coyote time", "air control", "wall slide", "saltar alto con mantención" | `godot-character-controller` |
 | Input | "mapear teclas", "gamepad", "capturar ratón", "remapeo en runtime" | `godot-input` |
 | Animation | "AnimationTree", "estado de locomoción", "one-shot", "root motion" | `godot-animationtree` |
+| Mezcla de animación | "BlendSpace", "walk/run por velocidad", "8 direcciones", "frames 2D por blend" | `godot-blendspace` |
+| Esqueleto | "bones", "pose vs rest", "physical bones/ragdoll", "la piel no sigue" | `godot-skeleton3d` |
+| IK | "IK", "brazo que sigue", "cabeza que mira", "2-bone IK", "pole" | `godot-ik` |
+| Retargeting | "retarget", "compartir animaciones entre modelos", "Mixamo", "Motion scale" | `godot-retargeting` |
 | Cámara 3D | "cámara orbital", "spring arm", "FOV", "transición entre cámaras" | `godot-camera3d` |
 | Shaders 3D | "escribir shader", "render mode", "uniform", "sRGB", "per-instance" | `godot-shader-spatial` |
 | Performance | "pocos FPS", "diagnosticar", "VRAM", "draw calls" | `godot-rendering-performance` |
@@ -52,6 +56,8 @@
 | "el level es por tiles" | `godot-tilemap` (+ `godot-physics` para las physics layers del TileSet) |
 | "la cámara siga al player 2D sin jitter" | `godot-camera2d` (`process_callback = PHYSICS`) + `godot-platformer-2d` |
 | "quiero que salte/siga con buen feel" | `godot-character-controller` (el feel, 2D y 3D) |
+| "que el brazo/cabeza siga a algo" | `godot-ik` (+ `godot-skeleton3d` si hay que mutar huesos) |
+| "los modelos nuevos deben usar las mismas animaciones" | `godot-retargeting` (+ `godot-skeleton3d`) |
 
 ### Reglas de NO-carga (evitar sobrecarga)
 
@@ -60,6 +66,7 @@
 - **No cargar `godot-physics`** si la petición es solo de UI o solo de animación de personaje ya construido (el cuerpo ya existe).
 - **No cargar `godot-raycast3d`/`godot-area3d`** si no hay world interaction en la petición.
 - **No cargar `godot-tilemap`** si el level 2D es por nodos/mesh (sin tiles).
+- **No cargar `godot-ik`/`godot-retargeting`** si la petición es solo una state machine de locomoción (sin targets que seguir, sin compartir animaciones entre modelos).
 - **No cargar `godot-camera2d`** para una escena 3D (y viceversa con `godot-camera3d`).
 
 ## Ejemplos de enrutamiento
@@ -82,13 +89,19 @@
 6. **"Piso de hielo / trampolín que lanza al personaje"**
    → `godot-physics-materials` (materiales, override) + `godot-physics` (damping elástico). No cargar: shaders.
 
+7. **"Importar 10 modelos de Mixamo que usen las mismas animaciones"**
+   → `godot-retargeting` (BoneMap + SkeletonProfileHumanoid + opciones del importer) + `godot-skeleton3d` (rest/motion_scale). No cargar: skills de juego 2D.
+
+8. **"El brazo debe seguir a la mano que agarró un objeto"**
+   → `godot-ik` (TwoBoneIK3D + target Node3D) + `godot-skeleton3d` (el modificador es hijo del skeleton). Opcional: `godot-raycast3d` si el target se proyecta al suelo.
+
 ## Si la skill no existe aún (lotes 1, 2, 6–20)
 
 | Tema | Estado | Qué hacer mientras |
 |---|---|---|
 | Editor, project settings, lifecycle, señales (Lote 1) | Pendiente | Usar la docs oficial 4.7; no afirmar APIs sin verificar |
 | Sintaxis GDScript, clases, await, @tool (Lote 2) | Pendiente | Usar la docs oficial 4.7 |
-| BlendSpace, IK, retargeting, Skeleton3D (Lote 6) | Pendiente | `godot-animationtree` cubre lo básico (AnimationNode, callbacks) |
+| BlendSpace, IK, retargeting, Skeleton3D (Lote 6) | ✅ Hecho | `godot-blendspace`, `godot-ik`, `godot-retargeting`, `godot-skeleton3d` |
 | UI/containers/theme (Lote 7) | Pendiente | Docs oficial 4.7 |
 | Renderers, MSAA, sombras, culling (Lote 8) | Pendiente | `godot-rendering-performance` cubre el diagnóstico (no la config) |
 | Shaders canvasitem/post-process (Lote 9) | Pendiente | `godot-shader-spatial` (3D) es el patrón de shader; el 2D difiere |

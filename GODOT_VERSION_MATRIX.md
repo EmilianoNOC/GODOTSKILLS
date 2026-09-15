@@ -66,6 +66,22 @@
 | `get_slide_collision_count()` (2D y 3D) | — | "Solo cuenta colisiones que cambiaron de dirección" (nota oficial, verificado 4.7) | No es un conteo de contactos: es el nº de rebotes del slide en el tick. |
 | `AnimatableBody2D` / `AnimatableBody3D` | Existentes | Existentes (verificado 4.7) | Para cuerpos que se mueven por animación y deben **empujar**; `StaticBody*` movido por código se teleporta (no empuja). |
 
+### Lote 6 (animación) — verificado 4.7 el 2026-09-15
+
+| API | 4.0 | 4.7 (stable) | Diferencia / acción |
+|---|---|---|---|
+| `IKConstraint3D` / `InverseKinematics3D` (3.x) | — | **No existen en 4.7 (verificado 404)** | IK **removida** en el upgrade a 4.0 y **volvió en 4.6** (artículo oficial). La API 4.x = familia `SkeletonModifier3D`. No portar código 3.x de IK. |
+| Familia `SkeletonModifier3D` (base + `active`/`influence` + `modification_processed`) | No existe (4.4 la introduce) | Existe (verificado 4.7) | Timeline oficial: base + `LookAtModifier3D` + `RetargetModifier3D` = **4.4**; `SpringBoneSimulator3D` + `BoneConstraint3D` (Aim/Copy/Convert) = **4.5**; `IKModifier3D` + 7 solvers, `BoneTwistDisperser3D`, `LimitAngularVelocityModifier3D` = **4.6**. El `influence` lo aplica el `Skeleton3D` (no en el código). |
+| Solvers IK: `TwoBoneIK3D`, `ChainIK3D` (→ `SplineIK3D`, `IterateIK3D` → `FABRIK3D`/`CCDIK3D`/`JacobianIK3D`) | No existen (4.6) | Existentes (verificado 4.7) | `TwoBoneIK3D`/`SplineIK3D` siempre deterministas; `IterateIK3D` según `deterministic` (default `false`; `max_iterations 4`). `TwoBoneIK3D` requiere pole. Modificadores corren **post-`AnimationMixer`** (oficial). |
+| `BoneConstraint3D` (reference bone **o Node3D**) | — | `Node3D` desde **4.6** (verificado) | En 4.5 solo refería bones; en 4.6+ puede referir un `Node3D` (twist/aiming post-IK). |
+| `RetargetModifier3D` (retargeting runtime; `enable` flags, `profile`, `use_global_pose`) | No existe (4.4) | Existe (verificado 4.7) | Hijo del `Skeleton3D` destino; reescribe el pose en el update del skeleton. `use_global_pose=true` con bones unmapeados = problemas visuales (nota oficial). |
+| Retargeting de **import** (`BoneMap` + `SkeletonProfile(Humanoid)`, Remove Tracks, Bone Renamer, Rest Fixer, `motion_scale`) | Existe desde 4.0 (artículo oficial) | Existe (verificado 4.7) | `SkeletonProfileHumanoid`: 56 bones, 4 groups, read-only, `root_bone "Root"`, `scale_base_bone "Hips"`. `Overwrite Axis` = "la opción más importante" (oficial). |
+| Bone Pose **incluye** Bone Rest | Sí (rediseño 4.0) | Sí (verificado 4.7) | En 3.x era relativo al rest. Afecta cálculos a mano (IK custom, overrides) y retargeting. |
+| `Skeleton3D.animate_physical_bones` | Existía | **Deprecada en 4.7 (verificado en la prop description)** | Workflow recomendado: `PhysicalBoneSimulator3D` hijo + su `.active`. Métodos `physical_bones_start/stop_simulation` siguen en la clase. |
+| `Skeleton3D` props/métodos (`motion_scale 1.0`, `show_rest_only`, `modifier_callback_mode_process IDLE`, `get/set_bone_pose`, `get_bone_global_pose` = relativo al **skeleton**, señales `pose_updated`/`skeleton_updated`, `NOTIFICATION_UPDATE_SKELETON=50` deferred) | — (no re-verificado en 4.0) | Existentes (verificado en 4.7) | `pose_updated` NO detecta modificadores (nota oficial) → leer en `skeleton_updated`/`modification_processed`. |
+| `AnimationNodeBlendSpace1D/2D` (antes `BlendSpace1D/2D` en 3.x) | — (renombrado en 4.0) | Existentes (verificado en 4.7) | En 4.x son `AnimationNode*` (`add_blend_point`). `SyncMode` tiene **4 valores** en 4.7 (`NONE/INDEPENDENT/CYCLIC_MUTABLE/CYCLIC_CONSTANT`); la prop `sync` es legacy (= `INDEPENDENT`). `cyclic_length > 0` para `CYCLIC_CONSTANT`. |
+| `AnimationMixer` (base de AnimationPlayer/Tree; `deterministic`, `callback_mode_process`, root motion, señales) | 4.2 la introduce | Existe (verificado 4.7) | `AnimationPlayer` default `callback_mode_discrete = Recessive`; `AnimationTree` = `Force Continuous` (artículo oficial 4.0→4.3). |
+
 ## Migración Godot 3.x → 4.x (relacionado con esta biblioteca)
 
 | 3.x | 4.x | Nota |
@@ -79,6 +95,9 @@
 | `PhysicsMaterial3D` / `PhysicsMaterial2D` (clases por dimensión, con `friction_combine_mode`/`bounce_combine_mode`) | `PhysicsMaterial` (clase única; combinación vía `rough`/`absorbent`) | La página `class_physicsmaterial3d.html` da 404 en 4.7 (verificado). |
 | `RigidBody3D.friction` / `bounce` (props directas del body en 3.x) | `PhysicsMaterial` en `physics_material_override` | En 4.7 el material se aplica por body (verificado 4.7). |
 | `PhysicsDirectSpaceState3D.test_motion` | `cast_motion` | Devuelve `[safe, unsafe]` (verificado 4.7). |
+| `IKConstraint3D` / `InverseKinematics3D` (3.x) | Familia `SkeletonModifier3D` (solvers desde 4.6) | Removida en 4.0, volvió en 4.6 (artículo oficial). |
+| `BlendSpace1D` / `BlendSpace2D` (recursos 3.x) | `AnimationNodeBlendSpace1D/2D` | Renombrado en 4.0; `add_blend_point`. |
+| `AnimationNodeBlendSpace*.sync` (bool) | `sync_mode` (4 valores en 4.7) | `sync = true` ≙ `INDEPENDENT` (verificado 4.7). |
 
 ## Cómo mantener esta matriz
 
