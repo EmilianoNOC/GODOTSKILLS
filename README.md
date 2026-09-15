@@ -28,17 +28,22 @@ ARENASKILLS/
     ├── godot-physics.md                  ← Lote 4: base — tipos de cuerpo, layers, ticks, troubleshooting
     ├── godot-raycast3d.md                ← Lote 4: base — RayCast3D, ShapeCast3D, intersect_ray
     ├── godot-area3d.md                   ← Lote 4: base — detección/influencia, triggers, overrides
-    └── godot-physics-materials.md        ← Lote 4: base — PhysicsMaterial (fricción/rebote)
+    ├── godot-physics-materials.md        ← Lote 4: base — PhysicsMaterial (fricción/rebote)
+    ├── godot-node2d.md                   ← Lote 5: base — transform 2D, local/global, Y abajo
+    ├── godot-tilemap.md                  ← Lote 5: base — TileMapLayer/TileSet (mapas por tiles)
+    ├── godot-platformer-2d.md            ← Lote 5: base — platformer 2D, una-vía, plataformas móviles
+    └── godot-camera2d.md                 ← Lote 5: base — follow, smoothing, límites, zoom 2D
 ```
 
 ## Estado actual
 
-**LOTE 4** (2026-09-15) — infraestructura + skill compuesta + 12 skills base:
+**LOTE 5** (2026-09-15) — infraestructura + skill compuesta + 16 skills base:
 
 - ✅ `godot-third-person-character` (compuesta, Verified 4.7): integra las bases.
 - ✅ 8 skills base (Lote 3, Verified 4.7): `godot-characterbody3d`, `godot-character-controller`, `godot-input`, `godot-animationtree`, `godot-camera3d`, `godot-shader-spatial`, `godot-rendering-performance`, `godot-lod`.
 - ✅ 4 skills base (Lote 4, Verified 4.7): `godot-physics`, `godot-raycast3d`, `godot-area3d`, `godot-physics-materials` — cierran las referencias pendientes de `godot-physics` en las skills de Lote 0/3.
-- ⏳ Resto de lotes (1, 2, 5–20) pendientes — ver plan en `GODOT_SKILLS_INDEX.md`.
+- ✅ 4 skills base (Lote 5, Verified 4.7): `godot-node2d`, `godot-tilemap`, `godot-platformer-2d`, `godot-camera2d` — el cluster 2D (mapas, juego, cámara) con referencias cruzadas al cluster 3D (asimetrías 2D↔3D verificadas: `move_and_slide()` void/bool, defaults distintos).
+- ⏳ Resto de lotes (1, 2, 6–20) pendientes — ver plan en `GODOT_SKILLS_INDEX.md`.
 
 ## Disciplina de la biblioteca
 

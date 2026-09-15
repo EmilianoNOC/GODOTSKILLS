@@ -1,9 +1,9 @@
 # SKILLS_GRAPH
 
-> Matriz de dependencias entre skills (spec §49). **Lote 4** — 2026-09-15.
+> Matriz de dependencias entre skills (spec §49). **Lote 5** — 2026-09-15.
 > `(P)` = skill pendiente de creación.
 
-## Grafo (Lote 4)
+## Grafo (Lote 5)
 
 ```text
                         ┌────────────────────────────────────────────┐
@@ -40,10 +40,29 @@ terbody3d   controller                        tree             spatial  performa
     │    │                (detección/influencia: layers/masks, ticks)
     │    └──────────────── godot-physics-materials ─┤
     │                 (override en Static/Rigid: damping elástico)
-    └─── godot-characterbody3d  (contexto de ticks/shapes/layers)
-                                  │
-        godot-rendering-performance ◄─────────────────────────────┘
-        (pair count / FPS se diagnostican en ambas skills)
+    ├─── godot-characterbody3d  (contexto de ticks/shapes/layers)
+    └─── godot-platformer-2d (2D: misma física, CharacterBody2D)
+                                  godot-rendering-performance ◄─────────────────────────────┘
+ (pair count / FPS se diagnostican en ambas skills)
+
+ CLUSTER 2D (Lote 5, todas Verified 4.7):
+
+   godot-node2d  (raíz 2D: transform, local/global, Y abajo)
+    ▲       ▲        ▲
+    │       │        │
+    │       │        └──── godot-camera2d  (la cámara es un Node2D;
+    │       │                  get_screen_center_position ≠ global_position)
+    │       │
+    │       └─────────── godot-tilemap  (TileMapLayer es Node2D;
+    │                    local_to_map/map_to_local; ← godot-physics
+    │                    (physics layer del TileSet) + godot-physics-materials)
+    │
+    └──────────────── godot-platformer-2d  (CharacterBody2D es Node2D;
+                     ← godot-physics (ticks/_physics_process)
+                     ← godot-tilemap (el level)
+                     ← godot-camera2d (follow; process_callback PHYSICS)
+                     ← godot-character-controller (feel: coyote/buffer)
+                     ← godot-physics-materials (fricción de superficies)
 ```
 
 ## Aristas (qué necesita de qué)
@@ -92,6 +111,22 @@ terbody3d   controller                        tree             spatial  performa
 | `godot-raycast3d` | `godot-characterbody3d` | opcional (cruce) | Consumidor principal (ray de piso/escalera/muro) |
 | `godot-rendering-performance` | `godot-physics` | opcional (cruce) | Diagnóstico conjunto del FPS: monitores de física (20/21) + los de render |
 
+### Cluster 2D (Lote 5)
+
+| Skill | Depende de | Tipo | Justificación |
+|---|---|---|---|
+| `godot-node2d` | (ninguna) | raíz 2D | Transform 2D, local/global, Y abajo, `to_global/to_local` |
+| `godot-tilemap` | `godot-node2d` | obligatoria | `TileMapLayer` es `Node2D`; `local_to_map`/`map_to_local` |
+| `godot-tilemap` | `godot-physics` | obligatoria | Physics layers del `TileSet` (collision_layer/mask/priority) |
+| `godot-tilemap` | `godot-physics-materials` | opcional | `PhysicsMaterial` por physics layer del TileSet |
+| `godot-platformer-2d` | `godot-node2d` | obligatoria | `CharacterBody2D` es `Node2D` (Y abajo) |
+| `godot-platformer-2d` | `godot-physics` | obligatoria | `_physics_process` (space locked), layers/masks, troubleshooting |
+| `godot-platformer-2d` | `godot-tilemap` | obligatoria | El level (physics de tiles) |
+| `godot-platformer-2d` | `godot-character-controller` | opcional | El feel (coyote/buffer/air control) sobre la base física |
+| `godot-platformer-2d` | `godot-camera2d` | opcional (cruce) | Follow del player (`process_callback = PHYSICS`) |
+| `godot-platformer-2d` | `godot-physics-materials` | opcional | Fricción/rebote de superficies 2D |
+| `godot-camera2d` | `godot-node2d` | obligatoria | La cámara es `Node2D` (canvas, transform) |
+
 ### Hacia pendientes (referenciados desde las bases)
 
 | Skill | Depende de (P) | Tipo |
@@ -102,9 +137,13 @@ terbody3d   controller                        tree             spatial  performa
 | `godot-animationtree` | `godot-root-motion` (Lote 6) / `godot-recipe-locomotion-blend` (Lote 6) | extensión |
 | `godot-physics` | `godot-vehiclebody3d` (Lote 4 ext.) | extensión |
 | `godot-physics` | `godot-softbody3d` (fuera de scope declarado) | — |
-| `godot-raycast3d` | `godot-raycast2d` (Lote 5) | espejo |
-| `godot-area3d` | `godot-area2d` (Lote 5) / `godot-audio-buses` (Lote 11) | espejo / puente audio |
-| `godot-physics-materials` | `godot-physics-materials-2d` (Lote 5) | espejo |
+| `godot-raycast3d` | `godot-raycast2d` (Lote 5 ext.) | espejo |
+| `godot-area3d` | `godot-area2d` (Lote 5 ext.) / `godot-audio-buses` (Lote 11) | espejo / puente audio |
+| `godot-physics-materials` | `godot-physics-materials-2d` (Lote 5 ext.) | espejo |
+| `godot-node2d` | `godot-control` (Lote 7) / `godot-canvasitem` (Lote 7/9) | el otro hijo de `CanvasItem` (UI) / `z_index`+drawing |
+| `godot-tilemap` | `godot-navigation2d` (Lote 10) / `godot-light2d` (Lote 11) | navigation layers / occlusion layers |
+| `godot-platformer-2d` | `godot-area2d` (Lote 5 ext.) | pickups/zonas del platformer |
+| `godot-camera2d` | `godot-control` (Lote 7) | el HUD que NO se mueve con la cámara |
 
 ## Reglas del grafo
 
@@ -113,4 +152,5 @@ terbody3d   controller                        tree             spatial  performa
 3. Al crear una skill base pendiente, actualizar: (a) este grafo, (b) `GODOT_SKILLS_INDEX.md` (estado → Verified), (c) la sección *Dependencias* de las compuestas que la usan.
 4. Si dos skills comparten contenido, la base lo posee y las compuestas lo referencian (spec §54 — evitar duplicación).
 5. Las aristas **opcionales** se cargan solo cuando la petición toca ese subsistema (el router de `AGENT_ROUTING.md` decide).
-6. `godot-physics` es raíz del cluster: el contenido compartido (layers/masks, ticks, debug shapes) se escribe UNA vez ahí y las skills del cluster lo referencian (no lo duplican).
+6. `godot-physics` es raíz del cluster de física (2D **y** 3D): el contenido compartido (layers/masks, ticks, troubleshooting) se escribe UNA vez ahí y las skills de ambos mundos lo referencian.
+7. `godot-node2d` es raíz del cluster 2D: el contenido compartido 2D (transform, local/global, Y abajo) se escribe UNA vez ahí.

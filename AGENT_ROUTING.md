@@ -1,134 +1,117 @@
 # AGENT_ROUTING
 
-> Enseña al agente de código a decidir qué skills consultar antes de implementar, modificar, depurar u optimizar (spec §50, §68).
-> **Estado: LOTE 4** — 2026-09-15. Creadas: `godot-third-person-character` (compuesta) + 12 skills base (incluido el cluster físico). El resto se enrutará cuando se creen (ver `GODOT_SKILLS_INDEX.md`).
+> Guía de enrutamiento para agentes LLM: qué skills cargar para cada tipo de petición, y qué NO usar.
+> **Estado: LOTE 5** — 2026-09-15. API referenciada: Godot **4.7 (stable)**.
 
-## Proceso de decisión
+## Cómo funciona
 
-```text
-USER REQUEST
-  ↓
-1. ANALYZE: ¿qué subsistemas toca la petición? (física, input, animación, cámara, rendering, datos, red…)
-  ↓
-2. SEARCH: buscar en GODOT_SKILLS_INDEX.md por categoría o por "pregunta".
-  ↓
-3. LOAD: cargar la skill que corresponda. Si la petición es un sistema completo → la compuesta;
-   si toca un subsistema concreto → la skill base (más profunda). La compuesta referencia a las bases.
-  ↓
-4. DEPENDENCIES: seguir el grafo (SKILLS_GRAPH.md) y cargar dependencias marcadas como obligatorias.
-  ↓
-5. VERIFY: cualquier API dudosa → consultar la documentación oficial (docs.godotengine.org/en/stable/, rama 4.7). NUNCA inventar APIs: si no se encuentra, marcar "API no verificada".
-  ↓
-6. PLAN → IMPLEMENT → TEST → DEBUG → OPTIMIZE ONLY IF NECESSARY (medir antes y después, spec §60).
-```
+1. El agente identifica el **subsistema** de la petición (3D characters, animation, input, cámara 3D, shaders 3D, performance, física, 2D, mapas…).
+2. Carga la **skill base** correspondiente; si la petición es de alto nivel ("hazme un personaje"), carga la **compuesta**, que orquesta las bases.
+3. Carga las **opcionales** solo si la petición toca ese subsistema (no cargar todo).
+4. Si la API no aparece verificada en la skill, **no se inventa**: se marca "API no verificada" y se busca en la docs oficial (rama actual).
 
-## Reglas de oro del router
+## Tabla de enrutamiento
 
-1. **Sistema completo → compuesta; subsistema → base.** "Quiero un personaje TPS completo" → `godot-third-person-character`. "El salto no se siente bien" → `godot-character-controller`. "El shader se ve lavado" → `godot-shader-spatial`.
-2. **Siempre la skill de error correspondiente ante un fallo.** `godot-error-<problema>` (cuando existan); mientras, la sección *Debugging* de la skill del subsistema.
-3. **Rendimiento = medir primero.** Ante "pocos FPS / lento / se traba" → `godot-rendering-performance` (§ Flujo de diagnóstico); si el cuello es de **física** → `godot-physics` (§ Performance: monitores `PHYSICS_3D_ACTIVE_OBJECTS`/`COLLISION_PAIRS`). Prohibido optimizar por intuición (spec §60).
-4. **Nunca mezclar versiones.** Toda skill indica su versión Godot; si la skill dice 4.7, el código es 4.7. Diferencias entre versiones → `GODOT_VERSION_MATRIX.md`.
-5. **Mínima complejidad.** Usar la solución más simple que resuelva (spec §58); escalar (separar scripts/manager) solo cuando la skill indique el punto de ruptura (spec §59).
-6. **Desconfiar de APIs "que deberían existir".** Las skills documentan también lo que **NO** existe (verificado): señales de floor/wall en `CharacterBody3D`, `floor_friction`/`wall_min_slide_speed`, smoothing de `Camera3D`, señales de acciones en `Input`, nodo `LOD` core, `get_spatial_lighting` (3.x), **`RigidBody3D.motion_mode` (CCD es `continuous_cd`), `StaticBody3D.force_recompute_shapes`, `PhysicsMaterial3D` (la clase es `PhysicsMaterial`), enums `*_combine_mode` de materiales, señales `object_entered/exited` en `Area3D`, `RayCast3D.cast_to` (es `target_position`), `test_motion` en 3D (es `cast_motion`)**. Si el usuario/tutorial las menciona → la skill da la alternativa.
-7. **Código que toca estado físico va en `_physics_process`.** Leer/mover bodies, raycasts directos y queries al space: fuera de ese callback el espacio de física puede estar *locked* (verificado). Regla transversal del cluster físico.
+### Petición de alto nivel
 
-## Tabla de enrutamiento (Lote 4)
+| Si la petición dice… | Cargar |
+|---|---|
+| "hazme un personaje 3D de acción / tercera persona" | `godot-third-person-character` (compuesta) + las 5 obligatorias que lista |
+| "hazme un platformer 2D" | `godot-platformer-2d` + `godot-tilemap` + `godot-node2d` (+ `godot-camera2d` para el follow) |
+| "hazme un top-down 2D" | `godot-node2d` + `godot-physics` (`MOTION_MODE_FLOATING`) + `godot-tilemap` (+ `godot-area2d` pendiente) |
 
-### Personaje y movimiento
+### Por subsistema (skills base, todas Verified 4.7)
 
-| Si el usuario pide… | Consultar | Notas |
+| Subsistema | Petición típica | Skill |
 |---|---|---|
-| "Quiero un personaje en tercera persona" (sistema completo) | `godot-third-person-character` | Compuesta: integra las bases |
-| "¿Cómo funciona `move_and_slide`?" / "el cuerpo se atasca" / "no choca" | `godot-characterbody3d` | § API, § Errores, § Debugging |
-| "Que el personaje salte mejor" / "coyote time" / "jump buffer" / "wall slide" / "air control" | `godot-character-controller` | § Implementación mínima/recomendada (tuning) |
-| "El personaje no se mueve" | `godot-characterbody3d` → § Debugging ("no se mueve") | + `godot-input` § Debugging ("el input no llega") |
-| "Migrar de Godot 3 a 4" (movimiento) | `godot-characterbody3d` + `godot-character-controller` → § Compatibilidad + `GODOT_VERSION_MATRIX.md` | |
+| Cuerpo 3D | "move_and_slide no funciona", "el personaje atraviesa", "floor_snap" | `godot-characterbody3d` |
+| Feel de control | "coyote time", "air control", "wall slide", "saltar alto con mantención" | `godot-character-controller` |
+| Input | "mapear teclas", "gamepad", "capturar ratón", "remapeo en runtime" | `godot-input` |
+| Animation | "AnimationTree", "estado de locomoción", "one-shot", "root motion" | `godot-animationtree` |
+| Cámara 3D | "cámara orbital", "spring arm", "FOV", "transición entre cámaras" | `godot-camera3d` |
+| Shaders 3D | "escribir shader", "render mode", "uniform", "sRGB", "per-instance" | `godot-shader-spatial` |
+| Performance | "pocos FPS", "diagnosticar", "VRAM", "draw calls" | `godot-rendering-performance` |
+| LOD | "LOD", "impostor", "visibility range" | `godot-lod` |
+| Física (base) | "capas de colisión", "RigidBody vs Static", "tunneling", "la física no es determinista" | `godot-physics` |
+| Queries 3D | "raycast", "picking con mouse", "shapecast", "cast_from" | `godot-raycast3d` |
+| Detección 3D | "pickup", "trigger", "zona de daño", "gravedad local" | `godot-area3d` |
+| Materiales físicos | "piso resbaladizo", "rebotar", "fricción" | `godot-physics-materials` |
+| **2D (base)** | "Node2D", "transform 2D", "local vs global", "rotar 2D" | `godot-node2d` |
+| **Mapas 2D** | "tilemap", "mapa por tiles", "terreno", "isométrico", "datos por tile" | `godot-tilemap` |
+| **Juego 2D** | "platformer", "saltos", "plataforma una-vía", "plataformas móviles" | `godot-platformer-2d` |
+| **Cámara 2D** | "follow del player", "límites de cámara", "zoom 2D", "lookahead" | `godot-camera2d` |
 
-### Física y colisión (nuevo en Lote 4)
+### Cargas opcionales (solo si la petición lo toca)
 
-| Si el usuario pide… | Consultar | Notas |
+| Si además dice… | Cargar también |
+|---|---|
+| "el personaje debe ver bien / destacarse" | `godot-shader-spatial` |
+| "el personaje lejano en un mundo grande / multiplayer" | `godot-lod` |
+| "que el mundo tenga colisiones / pickups / zonas" | `godot-physics` + `godot-area3d` (+ `godot-raycast3d` para line-sight/picking) |
+| "pisos resbaladizos / reboteros" | `godot-physics-materials` |
+| "el level es por tiles" | `godot-tilemap` (+ `godot-physics` para las physics layers del TileSet) |
+| "la cámara siga al player 2D sin jitter" | `godot-camera2d` (`process_callback = PHYSICS`) + `godot-platformer-2d` |
+| "quiero que salte/siga con buen feel" | `godot-character-controller` (el feel, 2D y 3D) |
+
+### Reglas de NO-carga (evitar sobrecarga)
+
+- **No cargar `godot-shader-spatial`** si la petición es solo de movimiento/cámara (no agrega valor).
+- **No cargar `godot-lod`** si el mundo es pequeño/cerrado (LOD no aplica).
+- **No cargar `godot-physics`** si la petición es solo de UI o solo de animación de personaje ya construido (el cuerpo ya existe).
+- **No cargar `godot-raycast3d`/`godot-area3d`** si no hay world interaction en la petición.
+- **No cargar `godot-tilemap`** si el level 2D es por nodos/mesh (sin tiles).
+- **No cargar `godot-camera2d`** para una escena 3D (y viceversa con `godot-camera3d`).
+
+## Ejemplos de enrutamiento
+
+1. **"Quiero un personaje 3D que corra, salte y tenga cámara orbital"**
+   → `godot-third-person-character` (compuesta) → arrastra a `characterbody3d`, `character-controller`, `input`, `animationtree`, `camera3d`. Opcionales: `shader-spatial` (visual) + `lod` (mundo grande). No cargar: `rendering-performance` salvo que haya un problema de FPS reportado.
+
+2. **"El personaje atraviesa la pared cuando corre rápido"**
+   → `godot-physics` (tunneling: ticks, CCD) + `godot-characterbody3d` (safe_margin, `up_direction`). No cargar: shaders, LOD, input.
+
+3. **"Hacer un platformer 2D con plataformas que cruzás por abajo"**
+   → `godot-platformer-2d` (una-vía, `move_and_slide`) + `godot-tilemap` (el level) + `godot-node2d` (base). Opcional: `godot-camera2d` (follow). No cargar: skills 3D.
+
+4. **"La cámara 2D tiembla al seguir al player"**
+   → `godot-camera2d` (process_callback PHYSICS, smoothing) + `godot-platformer-2d` (body físico). No cargar: nada 3D.
+
+5. **"El juego va a 15 FPS en el level grande"**
+   → `godot-rendering-performance` (flujo de diagnóstico, §60) + `godot-lod` (si hay mundo grande) + `godot-physics` (si son cuerpos: pair count). No cargar: input, animation.
+
+6. **"Piso de hielo / trampolín que lanza al personaje"**
+   → `godot-physics-materials` (materiales, override) + `godot-physics` (damping elástico). No cargar: shaders.
+
+## Si la skill no existe aún (lotes 1, 2, 6–20)
+
+| Tema | Estado | Qué hacer mientras |
 |---|---|---|
-| "¿Qué body uso?" (Static/Rigid/Character/Area) / "configurar capas y masks" | `godot-physics` | § Conceptos (4 tipos, layers/masks, ticks 60 Hz) |
-| "La caja debe caer y rebotar" / "empujar un objeto" / "fuerza e impulso" | `godot-physics` | § Implementación (`apply_force/impulse`, `_integrate_forces`) |
-| "El objeto atraviesa el piso" / "la pila se va" / "FPS a 1 de golpe" | `godot-physics` → § Debugging/Troubleshooting | `continuous_cd` (CCD), Jolt, ticks, *spiral of death* (todo oficial) |
-| "El objeto se duerme / no responde" / "¿con quién choco?" | `godot-physics` | Sleep (`can_sleep`) + contact reporting (`contact_monitor`/`max_contacts_reported`) |
-| "Raycast para detectar el piso" / "picking con mouse" / "línea de visión IA" | `godot-raycast3d` | RayCast3D (nodo) o `intersect_ray` (directo, solo en `_physics_process`) |
-| "Laser ancho" / "sweep" / "¿toco algo YA?" | `godot-raycast3d` | `ShapeCast3D` (overlap instantáneo oficial: target 0 + `force_shapecast_update`) |
-| "Pickup" / "zona de daño" / "checkpoint" / "gravedad distinta en una zona" | `godot-area3d` | Señales `body_entered/exited`, `monitoring/monitorable`, `SpaceOverride` |
-| "Suelo resbaladizo" / "trampolín" / "pelota que rebota" / "más fricción" | `godot-physics-materials` | `PhysicsMaterial` (friction/bounce/rough/absorbent) en `physics_material_override` |
-| "La cámara proyecta un ray desde el mouse" | `godot-raycast3d` | `project_ray_origin/normal` (verificado en el tutorial oficial) |
+| Editor, project settings, lifecycle, señales (Lote 1) | Pendiente | Usar la docs oficial 4.7; no afirmar APIs sin verificar |
+| Sintaxis GDScript, clases, await, @tool (Lote 2) | Pendiente | Usar la docs oficial 4.7 |
+| BlendSpace, IK, retargeting, Skeleton3D (Lote 6) | Pendiente | `godot-animationtree` cubre lo básico (AnimationNode, callbacks) |
+| UI/containers/theme (Lote 7) | Pendiente | Docs oficial 4.7 |
+| Renderers, MSAA, sombras, culling (Lote 8) | Pendiente | `godot-rendering-performance` cubre el diagnóstico (no la config) |
+| Shaders canvasitem/post-process (Lote 9) | Pendiente | `godot-shader-spatial` (3D) es el patrón de shader; el 2D difiere |
+| Navigation2D/3D, IA (Lote 10) | Pendiente | `godot-tilemap` cubre los navigation layers (pintar), no la navegación |
+| Audio (Lote 11) | Pendiente | Docs oficial 4.7 |
+| Networking (Lote 12) | Pendiente | Docs oficial 4.7 (MultiplayerAPI, RPC) |
+| Save/load, inventarios (Lote 13) | Pendiente | Docs oficial 4.7 |
+| Pooling, threading, profiling (Lote 14) | Pendiente | `godot-rendering-performance` (medir) + `godot-physics` (ticks) |
+| Export (Lote 15) | Pendiente | Docs oficial 4.7 |
+| Editor plugins (Lote 16) | Pendiente | Docs oficial 4.7 |
+| Anti-patrones (Lote 17) | Pendiente | Cada skill tiene su § Anti-patrones + § Errores frecuentes |
+| Recetas (Lote 18) | Pendiente | Los gérmenes están en las skills base (ver § Skills relacionadas) |
+| 3D avanzado (Lote 19) | Pendiente | `godot-lod` + `godot-rendering-performance` como base |
+| Procedural/testing/mobile/web/VR (Lote 20) | Pendiente | Docs oficial 4.7 |
 
-### Input
+## Regla de oro (spec §19)
 
-| Si el usuario pide… | Consultar | Notas |
-|---|---|---|
-| "Configurar input para teclado + gamepad" / "mapear acciones" | `godot-input` | § Arquitectura (Input Map) + § Implementación |
-| "Remapear controles en runtime" / "perfiles de controles" | `godot-input` | § Implementación recomendada #2 |
-| "El input no llega / el ratón va mal / el gamepad no se detecta" | `godot-input` → § Debugging | |
-| "Cursor capturado" / "orbitar con ratón" | `godot-input` + `godot-camera3d` | `screen_relative` (verificado) + `mouse_mode` |
+**APIs no inventadas.** Si una API no aparece verificada en la skill (o la skill la marca "API no verificada"), el agente **no la usa** como si existiera: se verifica en la docs oficial de la rama actual antes, o se declara "API no verificada" en el código entregado. Lista consolidada: `GODOT_SKILLS_INDEX.md` → *APIs "no verificadas" declaradas*.
 
-### Animación
+## Actualización
 
-| Si el usuario pide… | Consultar | Notas |
-|---|---|---|
-| "Animar la locomoción con AnimationTree" / "blend walk/run" / "máquina de estados" | `godot-animationtree` | § Implementación mínima (Idle/Move/Jump) |
-| "Ataque con OneShot" / "el ataque no rompe la locomoción" | `godot-animationtree` | § Implementación recomendada #1 (OneShot + `FADE_OUT` 4.7) |
-| "Root motion" (el clip mueve al personaje) | `godot-animationtree` | § Implementación recomendada #2 (`get_root_motion_position`) |
-| "La animación no cambia / no se reproduce" / "jitter de piernas" | `godot-animationtree` → § Debugging | |
-
-### Cámara
-
-| Si el usuario pide… | Consultar | Notas |
-|---|---|---|
-| "Hacer una cámara third person" / "orbitar" / "zoom" | `godot-camera3d` | § Implementación recomendada #1 (orbit + spring arm) |
-| "La cámara se mete en las paredes" | `godot-camera3d` → § Debugging | `SpringArm3D` + `add_excluded_object` |
-| "Proyectar un punto 3D a la pantalla" / "click sobre un objeto" | `godot-camera3d` | § Implementación recomendada #2/#3 (`project_position`, `project_ray_*`) |
-| "Transición de cámara" / "cámara cinemática" | `godot-camera3d` | § Implementación recomendada #4 (`make_current`/`clear_current`) |
-
-### Shaders
-
-| Si el usuario pide… | Consultar | Notas |
-|---|---|---|
-| "Efecto visual 3D" / "highlight" / "disolución" / "vertex animation" | `godot-shader-spatial` | § Implementación mínima/recomendada |
-| "El shader se ve lavado / los colores no son" | `godot-shader-spatial` → § Debugging | `source_color` (causa nº1) |
-| "Un valor por enemigo con 1 material" / "N objetos, 1 material" | `godot-shader-spatial` | § Uniforms por instancia (`instance uniform`, máx 16) |
-| "Viento en todo el mundo" / "1 parámetro para todos los shaders" | `godot-shader-spatial` | § Uniforms globales (`global uniform` + `RenderingServer.global_shader_parameter_set`) |
-| "El shader no compila" / "usar SCREEN_TEXTURE" / "get_spatial_lighting" | `godot-shader-spatial` → § Errores | APIs 3.x eliminadas (verificado) |
-
-### Rendimiento
-
-| Si el usuario pide… | Consultar | Notas |
-|---|---|---|
-| "Mi juego tiene pocos FPS" / "se traba" | `godot-rendering-performance` | § Flujo de diagnóstico (medir → clasificar → optimizar → medir) |
-| "Pocos FPS y el cuello es de física" (muchos bodies, pares de colisión) | `godot-physics` | § Performance (monitores 20/21, Jolt, shapes, ticks) |
-| "Reducir draw calls" / "muchos materiales" | `godot-rendering-performance` | § Menú de palancas (materiales, instancing, MultiMesh) |
-| "La VRAM está alta" / "las texturas pesan" | `godot-rendering-performance` | § Menú de palancas (VRAM) |
-| "Aplicar LOD" / "los árboles/props a distancia" / "impostor" | `godot-lod` | § Implementación (visibility ranges, mesh LOD, impostor, sombras) |
-| "Los props parpadean a lo lejos" | `godot-lod` → § Debugging | Hysteresis (`end_margin`) |
-| "Optimizar para móvil" | `godot-rendering-performance` | § Conceptos (fill rate, truco de ventana, baking) + `godot-lod` |
-
-## Peticiones fuera de cobertura del Lote 4
-
-Si la petición cae en un área sin skill creada (2D, UI, red, save/load, audio, IA, vehículos, export…), el agente debe:
-
-1. Decir explícitamente que no hay skill para ese sistema en estos lotes (no fingir cobertura).
-2. Ir directo a la documentación oficial:
-   - Class reference: https://docs.godotengine.org/en/stable/classes/index.html
-   - Tutorials: https://docs.godotengine.org/en/stable/tutorials/index.html
-3. Responder con la misma disciplina: APIs verificadas en la rama 4.7, marcar "API no verificada" si no se confirma, no inventar, no mezclar 3.x/4.x.
-4. Registrar el tema como pendiente en `GODOT_SKILLS_INDEX.md` (plan de lotes) para el siguiente lote.
-
-## Ejemplos de razonamiento (spec §50)
-
-- **"Quiero que el personaje pueda saltar"** → subsistema: movimiento → `godot-character-controller` (§ Implementación mínima: coyote + buffer) + `godot-input` (acción `jump`) + `godot-animationtree` (estado `Jump`).
-- **"El jugador salta al borde de la plataforma aunque pulse tarde"** → `godot-character-controller` (§ Errores #2, #7: coyote/buffer sin límite de tiempo) — ajustar los timers.
-- **"En el aire el personaje no frena"** → `godot-character-controller` (§ Errores #4: `air_accel`/`air_decel` delirantes) — el dial de air control.
-- **"La cámara rota con el personaje"** → `godot-third-person-character` (§ Errores #11) o `godot-characterbody3d` (§ Errores #9) — rotar el pivot `Model`, no el body.
-- **"Quiero enemigos que persigan al jugador"** → subsistemas: IA + navegación → NO cubierto (Lote 10) → docs oficiales (`NavigationAgent3D`, `NavigationServer3D`) + marcar pendiente `godot-navigationagent3d`.
-- **"Mi juego tiene pocos FPS"** → `godot-rendering-performance` (§ Flujo de diagnóstico): medir `TIME_FPS`/`TIME_PROCESS`/`TIME_PHYSICS_PROCESS`/`RENDER_TOTAL_DRAW_CALLS_IN_FRAME` → clasificar (CPU lógica / física / GPU) → optimizar una cosa → medir de nuevo.
-- **"El jugador atraviesa las paredes al correr rápido"** → `godot-physics` → § Debugging (tunneling): `continuous_cd = true`, pared más gruesa, shape ∝ velocidad, ticks 120+ (soluciones oficiales) — NO "subir la velocidad de la física a ciegas" (medir).
-- **"Hacer un pickup que se recoge al tocarlo"** → `godot-area3d` (§ Implementación mínima): `Area3D` + `body_entered` + `queue_free`; `monitorable = false`; la interacción la define la mask del area (player).
-- **"Quiero que el piso de hielo resbale"** → `godot-physics-materials` (§ Implementación recomendada #4): `PhysicsMaterial {friction=0.03, rough=false}` en `physics_material_override` del `StaticBody3D` — recordar la regla de `rough` (el mínimo gana).
-- **"Detectar con el mouse qué objeto toca"** → `godot-raycast3d` (§ Implementación recomendada #1): click en `_input`, query en `_physics_process` (space locked — verificado), `project_ray_origin/normal`, `intersect_ray` + dict de resultado.
-- **"Poner LOD a los árboles"** → `godot-lod` (§ Implementación mínima: `visibility_range_end` + margen) + `godot-rendering-performance` (medir draw calls/tris antes/después). Recordar: NO existe nodo `LOD` core en 4.7 (verificado).
-- **"Un highlight distinto por enemigo sin duplicar materiales"** → `godot-shader-spatial` (§ Uniforms por instancia: `instance uniform` + `set_instance_shader_parameter`).
+Al crear una skill (lotes pendientes):
+1. Añadir su fila en las tablas de enrutamiento.
+2. Revisar la sección "Si la skill no existe aún" y quitar la fila correspondiente.
+3. Ajustar las reglas de NO-carga si la nueva skill solapa.
+4. Bump el estado del header a "LOTE N".

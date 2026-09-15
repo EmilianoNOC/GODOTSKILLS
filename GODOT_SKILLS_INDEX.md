@@ -1,15 +1,15 @@
 # GODOT SKILLS INDEX
 
 > Índice global de la biblioteca de skills para Godot 4.x (spec §55).
-> **Estado: LOTE 4** — 2026-09-15. Fuente de verdad de la API: `docs.godotengine.org/en/stable/` (rama **4.7**).
+> **Estado: LOTE 5** — 2026-09-15. Fuente de verdad de la API: `docs.godotengine.org/en/stable/` (rama **4.7**).
 
 ## Resumen
 
 | Métrica | Valor |
 |---|---|
-| Skills creadas | **13** (1 compuesta + 12 base) |
-| Skills pendientes | ver plan de lotes (lotes 1, 2, 5–20) |
-| Skills actualizadas | 3 en el Lote 4 (`godot-characterbody3d`, `godot-rendering-performance`, `godot-third-person-character`: cerradas sus refs a `godot-physics` pendiente) |
+| Skills creadas | **17** (1 compuesta + 16 base) |
+| Skills pendientes | ver plan de lotes (lotes 1, 2, 6–20) |
+| Skills actualizadas | 0 en el Lote 5 |
 | Skills descartadas por duplicación | 0 |
 | Versión de referencia verificada | Godot 4.7 (stable) |
 
@@ -17,7 +17,7 @@
 
 - **Estado**: `Verified` = API verificada contra la docs oficial en la versión indicada. `Pendiente` = skill programada, aún no generada.
 - **Nivel**: BEGINNER / INTERMEDIATE / ADVANCED / EXPERT (conocimiento del motor requerido, spec §56).
-- Las skills compuestas (spec §51) agrupan skills base; desde el Lote 4, las 12 bases existen y la compuesta las referencia.
+- Las skills compuestas (spec §51) agrupan skills base; desde el Lote 5, las 16 bases existen y la compuesta las referencia.
 
 ## 3D · Characters
 
@@ -32,6 +32,15 @@
 | ID | Categoría | Nivel | Godot | Estado |
 |---|---|---|---|---|
 | `godot-camera3d` | 3D · Cámaras | Intermedio | 4.7 | Verified |
+
+## 2D
+
+| ID | Categoría | Nivel | Godot | Estado |
+|---|---|---|---|---|
+| `godot-node2d` | 2D · Base | Principiante | 4.7 | Verified |
+| `godot-tilemap` | 2D · Base (mapas) | Principiante | 4.7 | Verified |
+| `godot-platformer-2d` | 2D · Base (juego) | Principiante | 4.7 | Verified |
+| `godot-camera2d` | 2D · Base (cámara) | Principiante | 4.7 | Verified |
 
 ## Animation
 
@@ -67,7 +76,7 @@
 | `godot-rendering-performance` | Performance | Avanzado | 4.7 | Verified |
 | `godot-lod` | 3D · Performance | Avanzado | 4.7 | Verified |
 
-## Mapas por pregunta (spec §2 — cobertura al cierre del Lote 4)
+## Mapas por pregunta (spec §2 — cobertura al cierre del Lote 5)
 
 | Pregunta | Skill a consultar |
 |---|---|
@@ -85,6 +94,10 @@
 | ¿Cómo hacer pickups / triggers / zonas de daño / override de gravedad? | `godot-area3d` |
 | ¿Cómo hacer superficies resbaladizas, con rebote, de alto agarre? | `godot-physics-materials` |
 | ¿El objeto atraviesa el piso / la pila se va / el FPS se va a 1 (física)? | `godot-physics` (§ Debugging/Troubleshooting) |
+| ¿Cómo hacer un platformer 2D (saltos, pendientes, plataformas una-vía/móviles)? | `godot-platformer-2d` |
+| ¿Cómo armar mapas por tiles (colisión, terreno, datos por tile, isométrico/hex)? | `godot-tilemap` |
+| ¿Cómo hacer una cámara 2D (follow, smoothing, límites, zoom, lookahead)? | `godot-camera2d` |
+| ¿Transform/posición/rotación de nodos 2D (local vs global, `to_global`)? | `godot-node2d` |
 | ¿Mi juego tiene pocos FPS? | `godot-rendering-performance` (§ Flujo de diagnóstico) + `godot-physics` (si es física) |
 | ¿El personaje no se mueve / no salta bien / la cámara choca / la animación no cambia? | La skill del subsistema (§ Debugging) |
 
@@ -97,7 +110,7 @@
 | 2 | GDScript (sintaxis, tipos, classes, signals, await, export, tool, performance) | Pendiente |
 | 3 | Las 8 skills base del Lote 0 (characterbody3d, character-controller, input, animationtree, camera3d, shader-spatial, rendering-performance, lod) | ✅ Hecho (2026-09-15) |
 | 4 | Physics (capas, shapes, raycast/shapecast, areas, materiales, interpolación) | ✅ Hecho (2026-09-15): `godot-physics`, `godot-raycast3d`, `godot-area3d`, `godot-physics-materials` |
-| 5 | 2D (nodos, tilemap, plataformas, cámaras 2D) | Pendiente |
+| 5 | 2D (nodos, tilemap, plataformas, cámaras 2D) | ✅ Hecho (2026-09-15): `godot-node2d`, `godot-tilemap`, `godot-platformer-2d`, `godot-camera2d` |
 | 6 | Animation (BlendSpace, IK, retargeting, Skeleton3D) | Pendiente |
 | 7 | UI (containers, theme, focus, localización) | Pendiente |
 | 8 | Rendering (renderers, MSAA, sombras, culling, profiling GPU) | Pendiente |
@@ -114,7 +127,7 @@
 | 19 | 3D avanzado (open world, chunking, vegetación, HLOD) | Pendiente |
 | 20 | Procedural generation + testing + mobile + web + VR | Pendiente |
 
-## APIs "no verificadas" declaradas (Lotes 3–4)
+## APIs "no verificadas" declaradas (Lotes 3–5)
 
 Marques explícitas dejadas por las skills (no afirmar como API hasta verificar en la rama actual):
 
@@ -127,3 +140,5 @@ Marques explícitas dejadas por las skills (no afirmar como API hasta verificar 
 | `godot-raycast3d` | Clave `metadata` en el dict de `intersect_ray` | La tabla 4.7 lista `collider, collider_id, normal, position, face_index, rid, shape` (sin `metadata`); aparece en el tutorial de rama master → tratar como no verificada para 4.7 |
 | `godot-area3d` | Señales `object_entered` / `object_exited` | No están en la tabla de señales 4.7 (solo `area_*`/`body_*` y `_shape_*`) |
 | `godot-physics-materials` | Clase `PhysicsMaterial3D` / enums `*_combine_mode` | La clase 4.7 es `PhysicsMaterial` (una sola; la página 3D da 404) y la combinación la rigen `rough`/`absorbent` |
+| `godot-tilemap` | Getter exacto de custom data en `TileData` (`TileData.custom_data[…]/get_custom_data(…)`) | El mecanismo de capas de datos está verificado en `TileSet`/`TileMapLayer`; el acceso exacto al valor en `TileData` no se verificó en esta revisión — verificar `TileData` antes de usar |
+| `godot-node2d` / `godot-platformer-2d` | Índices exactos de los monitores `Performance.PHYSICS_2D_ACTIVE_OBJECTS`/`PHYSICS_2D_COLLISION_PAIRS` | La familia de monitores 2D existe; los índices numéricos no se citan sin verificar (los de 3D, 20/21, sí están verificados) |
