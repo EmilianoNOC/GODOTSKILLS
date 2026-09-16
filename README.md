@@ -1,2 +1,68 @@
 # ARENASKILLS
-Probar las skills de arena
+
+**Godot Engine Development Knowledge System** — biblioteca de skills técnicas para un agente de programación especializado en desarrollo de videojuegos con **Godot 4.x** (fuente de verdad: `docs.godotengine.org/en/stable/`, rama **4.7**).
+
+## Qué es
+
+Una colección de skills pequeñas, independientes, reutilizables y combinables (una skill = una capacidad) que permiten a un agente de código: consultar antes de implementar, elegir APIs, diseñar arquitectura, escribir GDScript 4.x, diagnosticar errores, optimizar midiendo y detectar anti-patrones.
+
+## Estructura
+
+```text
+ARENASKILLS/
+├── README.md                    ← este archivo
+├── GODOT_SKILLS_INDEX.md        ← índice global (categorías, IDs, niveles, estados)
+├── AGENT_ROUTING.md             ← cómo decide el agente qué skills cargar
+├── SKILLS_GRAPH.md              ← matriz/grafo de dependencias entre skills
+├── GODOT_VERSION_MATRIX.md      ← diferencias de API verificadas entre versiones
+└── skills/
+    ├── godot-third-person-character.md   ← Lote 0: skill compuesta (personaje 3D en 3ª persona)
+    ├── godot-characterbody3d.md          ← Lote 3: base — cuerpo físico kinemático
+    ├── godot-character-controller.md     ← Lote 3: base — patrón de control/feel de movimiento
+    ├── godot-input.md                    ← Lote 3: base — Input Map, polling, ratón, gamepad
+    ├── godot-animationtree.md            ← Lote 3: base — estados, blend, one-shots, root motion
+    ├── godot-camera3d.md                 ← Lote 3: base — cámara 3D, spring arm, proyección
+    ├── godot-shader-spatial.md           ← Lote 3: base — shaders 3D, uniforms, sRGB
+    ├── godot-rendering-performance.md    ← Lote 3: base — medir/diagnosticar/optimizar rendering
+    ├── godot-lod.md                      ← Lote 3: base — LOD, visibility ranges, impostor
+    ├── godot-physics.md                  ← Lote 4: base — tipos de cuerpo, layers, ticks, troubleshooting
+    ├── godot-raycast3d.md                ← Lote 4: base — RayCast3D, ShapeCast3D, intersect_ray
+    ├── godot-area3d.md                   ← Lote 4: base — detección/influencia, triggers, overrides
+    ├── godot-physics-materials.md        ← Lote 4: base — PhysicsMaterial (fricción/rebote)
+    ├── godot-node2d.md                   ← Lote 5: base — transform 2D, local/global, Y abajo
+    ├── godot-tilemap.md                  ← Lote 5: base — TileMapLayer/TileSet (mapas por tiles)
+    ├── godot-platformer-2d.md            ← Lote 5: base — platformer 2D, una-vía, plataformas móviles
+    ├── godot-camera2d.md                 ← Lote 5: base — follow, smoothing, límites, zoom 2D
+    ├── godot-blendspace.md               ← Lote 6: base — BlendSpace1D/2D (sync modes, triángulos)
+    ├── godot-skeleton3d.md               ← Lote 6: base — bones, pose vs rest, physical bones
+    ├── godot-ik.md                       ← Lote 6: base — IK nativa (SkeletonModifier3D family)
+    ├── godot-retargeting.md              ← Lote 6: base — BoneMap/SkeletonProfile + runtime
+    ├── godot-control.md                  ← Lote 7: base — anchors/offsets, sizing, input, focus
+    ├── godot-containers.md               ← Lote 7: base — 13 containers, sizing options
+    ├── godot-theme.md                    ← Lote 7: base — Theme, items, variations, overrides
+    └── godot-localization.md             ← Lote 7: base — tr/tr_n, contexts, RTL, pseudoloc
+```
+
+## Estado actual
+
+**LOTE 7** (2026-09-15) — infraestructura + skill compuesta + 24 skills base:
+
+- ✅ `godot-third-person-character` (compuesta, Verified 4.7): integra las bases.
+- ✅ 8 skills base (Lote 3, Verified 4.7): `godot-characterbody3d`, `godot-character-controller`, `godot-input`, `godot-animationtree`, `godot-camera3d`, `godot-shader-spatial`, `godot-rendering-performance`, `godot-lod`.
+- ✅ 4 skills base (Lote 4, Verified 4.7): `godot-physics`, `godot-raycast3d`, `godot-area3d`, `godot-physics-materials` — cierran las referencias pendientes de `godot-physics` en las skills de Lote 0/3.
+- ✅ 4 skills base (Lote 5, Verified 4.7): `godot-node2d`, `godot-tilemap`, `godot-platformer-2d`, `godot-camera2d` — el cluster 2D (mapas, juego, cámara) con referencias cruzadas al cluster 3D (asimetrías 2D↔3D verificadas: `move_and_slide()` void/bool, defaults distintos).
+- ✅ 4 skills base (Lote 6, Verified 4.7): `godot-blendspace`, `godot-skeleton3d`, `godot-ik`, `godot-retargeting` — el cluster animación (mezcla profunda, esqueleto, IK nativa 4.6+, retargeting import/runtime).
+- ✅ 4 skills base (Lote 7, Verified 4.7): `godot-control`, `godot-containers`, `godot-theme`, `godot-localization` — el cluster UI (layout, estilo, i18n/RTL).
+- ⏳ Resto de lotes (1, 2, 8–20) pendientes — ver plan en `GODOT_SKILLS_INDEX.md`.
+
+## Disciplina de la biblioteca
+
+- APIs **solo** verificadas contra la documentación oficial 4.7; lo dudoso se marca "API no verificada"; **nunca inventar APIs**.
+- Cada skill: formato obligatorio (ID, categoría, versión, propósito, cuándo/no usar, API, arquitectura, implementaciones, errores, anti-patrones, performance, debugging, compatibilidad, dependencias, referencias).
+- Confianza explícita (HIGH/MEDIUM/LOW) y nivel (BEGINNER→EXPERT) por skill.
+- Rendimiento: **MEASURE → IDENTIFY → OPTIMIZE → MEASURE AGAIN**.
+- Generación incremental por lotes; cada lote reporta lo creado, lo verificado y lo pendiente.
+
+## Cómo usarla (flujo del agente)
+
+`USER REQUEST → ANALYZE → SEARCH (GODOT_SKILLS_INDEX.md) → LOAD (skills + AGENT_ROUTING.md) → CHECK DEPENDENCIES (SKILLS_GRAPH.md) → CONSULT DOCS IF NEEDED → PLAN → IMPLEMENT → TEST → DEBUG → OPTIMIZE ONLY IF NECESSARY → VERIFY`
